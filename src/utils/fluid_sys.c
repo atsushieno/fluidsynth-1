@@ -132,24 +132,48 @@ fluid_default_log_function(int level, char* message, void* data)
 
   switch (level) {
   case FLUID_PANIC:
+#ifdef ANDROID
+    __android_log_write(ANDROID_LOG_FATAL, fluid_libname, message);
+#else
     FLUID_FPRINTF(out, "%s: panic: %s\n", fluid_libname, message);
+#endif
     break;
   case FLUID_ERR:
+#ifdef ANDROID
+    __android_log_write(ANDROID_LOG_ERROR, fluid_libname, message);
+#else
     FLUID_FPRINTF(out, "%s: error: %s\n", fluid_libname, message);
+#endif
     break;
   case FLUID_WARN:
+#ifdef ANDROID
+    __android_log_write(ANDROID_LOG_WARN, fluid_libname, message);
+#else
     FLUID_FPRINTF(out, "%s: warning: %s\n", fluid_libname, message);
+#endif
     break;
   case FLUID_INFO:
+#ifdef ANDROID
+    __android_log_write(ANDROID_LOG_INFO, fluid_libname, message);
+#else
     FLUID_FPRINTF(out, "%s: %s\n", fluid_libname, message);
+#endif
     break;
   case FLUID_DBG:
 #if DEBUG
+#ifdef ANDROID
+    __android_log_write(ANDROID_LOG_DEBUG, fluid_libname, message);
+#else
     FLUID_FPRINTF(out, "%s: debug: %s\n", fluid_libname, message);
+#endif
 #endif
     break;
   default:
+#ifdef ANDROID
+    __android_log_write(ANDROID_LOG_VERBOSE, fluid_libname, message);
+#else
     FLUID_FPRINTF(out, "%s: %s\n", fluid_libname, message);
+#endif
     break;
   }
   fflush(out);
