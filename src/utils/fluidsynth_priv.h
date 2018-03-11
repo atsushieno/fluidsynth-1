@@ -151,7 +151,7 @@ typedef guint64  uint64_t;
 #endif
 
 
-#include "fluidsynth.h"
+#include "fluidsynth/fluidsynth.h"
 
 
 /***************************************************************

@@ -488,7 +488,6 @@ AC_OUTPUT([
 	Makefile
     cmake_admin/Makefile
 	src/Makefile
-	src/config_win32.h
 	doc/Makefile
 	include/Makefile
 	include/fluidsynth/Makefile
