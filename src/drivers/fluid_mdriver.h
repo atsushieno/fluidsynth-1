@@ -97,4 +97,13 @@ void delete_fluid_coremidi_driver(fluid_midi_driver_t *p);
 void fluid_coremidi_driver_settings(fluid_settings_t *settings);
 #endif
 
-#endif  /* _FLUID_AUDRIVER_H */
+/* definitions for the Android AMidi driver */
+#if ANDROID_AMIDI_SUPPORT
+fluid_midi_driver_t *new_fluid_android_amidi_driver(fluid_settings_t *settings,
+        handle_midi_event_func_t handler,
+        void *event_handler_data);
+void delete_fluid_android_amidi_driver(fluid_midi_driver_t *p);
+void fluid_android_amidi_driver_settings(fluid_settings_t *settings);
+#endif
+
+#endif  /* _FLUID_MDRIVER_H */

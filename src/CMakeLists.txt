@@ -136,6 +136,12 @@ if ( OBOE_SUPPORT )
   include_directories ( ${OBOE_INCLUDE_DIRS} )
 endif ( OBOE_SUPPORT )
 
+if ( ANDROID_AMIDI_SUPPORT )
+  set ( fluid_android_amidi_SOURCES drivers/fluid_android_amidi.c )
+  include_directories ( ${ANDROID_AMIDI_INCLUDE_DIRS} )
+  link_libraries ( amidi )
+endif ( ANDROID_AMIDI_SUPPORT )
+
 set ( config_SOURCES ${CMAKE_BINARY_DIR}/config.h )
 
 set ( libfluidsynth_SOURCES
@@ -259,6 +265,7 @@ endif ( WIN32 )
 add_library ( libfluidsynth-OBJ OBJECT
     ${config_SOURCES}
     ${fluid_alsa_SOURCES}
+    ${fluid_android_amidi_SOURCES}
     ${fluid_aufile_SOURCES}
     ${fluid_coreaudio_SOURCES}
     ${fluid_coremidi_SOURCES}
@@ -353,6 +360,7 @@ target_link_libraries ( libfluidsynth
     ${MidiShare_LIBS}
     ${OpenSLES_LIBS}
     ${OBOE_LIBS}
+    ${ANDROID_AMIDI_LIBS}
     ${LIBFLUID_LIBS}
 )
 
