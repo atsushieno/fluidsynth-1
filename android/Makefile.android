@@ -15,7 +15,7 @@ CERBERO=$(PWD)/external/cerbero
 OBOE=$(PWD)/external/oboe
 CMAKE=cmake
 
-ANDROID_NDK = $(PWD)/external/cerbero/build/android-ndk-18
+ANDROID_NDK = $(PWD)/external/cerbero/build/android-ndk-20
 
 ABIS_SIMPLE = x86 x86-64 armv7 arm64
 
@@ -32,7 +32,7 @@ prepare: $(CERBERO) $(OBOE)
 	done
 
 $(CERBERO):
-	git clone https://github.com/atsushieno/cerbero.git $(CERBERO) && cd $(CERBERO) && git checkout 7a6fd79
+	git clone https://github.com/atsushieno/cerbero.git $(CERBERO) && cd $(CERBERO) && git checkout 8aa150b0
 
 $(OBOE):
 	git clone https://github.com/atsushieno/oboe.git $(OBOE)
@@ -85,11 +85,11 @@ build-fluidsynth:
 build-fluidsynth-one:
 	mkdir -p build/$(A_ABI) && cd build/$(A_ABI) && \
 	LD_RUN_PATH=$(DIST_PATH)/android-$(BUILD_ABI)/lib:$(OBOE_BUILD_PATH)/$(A_ABI) LD_LIBRARY_PATH=$(DIST_PATH)/android_$(BUILD_ABI)/lib PKG_CONFIG_PATH=$(DIST_PATH)/android_$(BUILD_ABI)/lib/pkgconfig/:$(OBOE_BUILD_PATH)/$(A_ABI) \
-	$(CMAKE) -DCMAKE_INSTALL_PREFIX=$(PWD)/dist/$(A_ABI) -DCMAKE_TOOLCHAIN_FILE=$(ANDROID_NDK)/build/cmake/android.toolchain.cmake -Denable-opensles=on -Denable-oboe=on -Denable-jack=off -Denable-oss=off -Denable-pulseaudio=off -Denable-libsndfile=off -Denable-dbus=off -Denable-debug=on -DANDROID_NATIVE_API_LEVEL=android-27 -DANDROID_PLATFORM=android-27 -DANDROID_ABI=$(A_ABI) ../../.. && make
+	$(CMAKE) -DCMAKE_INSTALL_PREFIX=$(PWD)/dist/$(A_ABI) -DCMAKE_TOOLCHAIN_FILE=$(ANDROID_NDK)/build/cmake/android.toolchain.cmake -Denable-opensles=on -Denable-oboe=on -Denable-android-amidi=on -Denable-jack=off -Denable-oss=off -Denable-pulseaudio=off -Denable-libsndfile=off -Denable-dbus=off -Denable-debug=on -DANDROID_NATIVE_API_LEVEL=android-29 -DANDROID_PLATFORM=android-29 -DANDROID_ABI=$(A_ABI) ../../.. && make
 
 build-oboe-one:
 	mkdir -p $(OBOE)/build/$(A_ABI) && cd $(OBOE)/build/$(A_ABI) && \
-		$(CMAKE) -DCMAKE_TOOLCHAIN_FILE=$(ANDROID_NDK)/build/cmake/android.toolchain.cmake -DANDROID_ABI=$(A_ABI) -DANDROID_NATIVE_API_LEVEL=android-27 -DANDROID_PLATFORM=android-27 -DBUILD_SHARED_LIBS=on ../.. && make
+		$(CMAKE) -DCMAKE_TOOLCHAIN_FILE=$(ANDROID_NDK)/build/cmake/android.toolchain.cmake -DANDROID_ABI=$(A_ABI) -DANDROID_NATIVE_API_LEVEL=android-29 -DANDROID_PLATFORM=android-29 -DBUILD_SHARED_LIBS=on ../.. && make
 	cp oboe-1.0.pc $(OBOE)/build/$(A_ABI)
 
 dist-oboe-one:

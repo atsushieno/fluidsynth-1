@@ -92,6 +92,14 @@ static const fluid_mdriver_definition_t fluid_midi_drivers[] =
         fluid_coremidi_driver_settings
     },
 #endif
+#if ANDROID_AMIDI_SUPPORT
+    {
+        "amidi",
+        new_fluid_android_amidi_driver,
+        delete_fluid_android_amidi_driver,
+        fluid_android_amidi_driver_settings
+    },
+#endif
     /* NULL terminator to avoid zero size array if no driver available */
     { NULL, NULL, NULL, NULL }
 };
