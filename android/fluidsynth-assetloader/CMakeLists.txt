@@ -2,7 +2,27 @@ cmake_minimum_required(VERSION 3.6.0)
 
 project ( fluidsynth-assetloader C )
 
-set ( fluidsynth-assetloader_sources fluid_androidasset.c )
+option ( enable-android-amidi "compile Android AMidi support (requires AMidi)" off )
+
+include ( CheckIncludeFile )
+
+unset ( ANDROID_AMIDI_SUPPORT CACHE )
+if ( enable-android-amidi )
+  check_include_file ( amidi/AMidi.h ANDROID_AMIDI_SUPPORT )
+  find_library ( ANDROID_AMIDI_LIBS amidi )
+else ( enable-android-amidi )
+  unset ( ANDROID_AMIDI_LIBS CACHE )
+endif ( enable-android-amidi )
+
+if ( ANDROID_AMIDI_SUPPORT )
+  set ( fluid_android_amidi_SOURCES fluid_android_amidi.c )
+  include_directories ( ${ANDROID_AMIDI_INCLUDE_DIRS} )
+  link_libraries ( amidi )
+endif ( ANDROID_AMIDI_SUPPORT )
+
+
+
+set ( fluidsynth-assetloader_sources fluid_androidasset.c ${fluid_android_amidi_SOURCES} )
 
 add_library ( fluidsynth-assetloader SHARED ${fluidsynth-assetloader_sources} )
 

@@ -54,7 +54,8 @@ fluid_android_amidi_run(void* d);
  */
 void fluid_android_amidi_driver_settings(fluid_settings_t *settings)
 {
-    fluid_settings_register_int(settings, "midi.android-amidi.port", 0, -0x80000000, 0x7FFFFFFF, 0);
+    fluid_settings_register_int(settings, "midi.android-amidi.device-handle", 0, -0x80000000, 0x7FFFFFFF, 0);
+    fluid_settings_register_num(settings, "midi.android-amidi.port", 0, DBL_MIN, DBL_MAX, 0);
 }
 
 /*
@@ -68,6 +69,7 @@ new_fluid_android_amidi_driver(fluid_settings_t *settings,
     AMidiDevice* device;
     AMidiOutputPort* outputPort;
     int portNumber;
+    double deviceHandle; /* it is allocated in bigger unit than int so that long pointer can remain valid */
 
     dev = FLUID_MALLOC(sizeof(fluid_android_amidi_driver_t));
 
@@ -97,8 +99,9 @@ new_fluid_android_amidi_driver(fluid_settings_t *settings,
     }
 
     fluid_settings_getint (settings, "midi.android-amidi.port", &portNumber);
+    fluid_settings_getnum (settings, "midi.android-amidi.device-handle", &deviceHandle);
 
-    device = (AMidiDevice*) data;
+    device = (AMidiDevice*) (void*) (int) deviceHandle;
     
     if (AMidiOutputPort_open(device, portNumber, &outputPort) != AMEDIA_OK)
     {
