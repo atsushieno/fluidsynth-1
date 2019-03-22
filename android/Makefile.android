@@ -9,6 +9,8 @@
 # - build oboe-c to provide oboe features via shared library
 # - build libfluidsynth.a using glib and oboe-c (shared)
 # - build libfluidsynth.so from libfluidsynth.a and glib and co.
+# - build libfluidsynth-assetloader.so
+# - build libfluidsynth-android-amidi.so
 #
 PWD=$(shell pwd)
 CERBERO=$(PWD)/external/cerbero
@@ -38,7 +40,12 @@ $(OBOE):
 	git clone https://github.com/Google/oboe.git $(OBOE) && cd $(OBOE) && git checkout 9bf3943
 
 .PHONY: build
-build: build-oboe dist-oboe build-deps-cerbero dist-deps-cerbero build-fluidsynth dist-fluidsynth build-fluidsynth-assetloader dist-fluidsynth-assetloader
+build: \
+	build-oboe dist-oboe \
+	build-deps-cerbero dist-deps-cerbero \
+	build-fluidsynth dist-fluidsynth \
+	build-fluidsynth-assetloader dist-fluidsynth-assetloader \
+	build-fluidsynth-android-amidi dist-fluidsynth-android-amidi
 
 .PHONY: build-deps-cerbero
 build-deps-cerbero:
@@ -111,8 +118,18 @@ dist-fluidsynth-assetloader:
 	cp fluidsynth-assetloader/build/armeabi-v7a/*.so dist/armeabi-v7a/
 	cp fluidsynth-assetloader/build/arm64-v8a/*.so dist/arm64-v8a/
 
+build-fluidsynth-android-amidi:
+	cd fluidsynth-android-amidi && ./ext-build.sh
+
+dist-fluidsynth-android-amidi:
+	cp fluidsynth-android-amidi/build/x86/*.so dist/x86/
+	cp fluidsynth-android-amidi/build/x86_64/*.so dist/x86_64/
+	cp fluidsynth-android-amidi/build/armeabi-v7a/*.so dist/armeabi-v7a/
+	cp fluidsynth-android-amidi/build/arm64-v8a/*.so dist/arm64-v8a/
+
 clean:
-	rm -rf dist/* build/* external/oboe/build/* obj/local/* fluidsynth-asset-loader/build/*
+	rm -rf dist/* build/* external/oboe/build/* obj/local/* \
+	fluidsynth-asset-loader/build/* fluidsynth-android-amidi/build/*
 
 .PHONY: wipe
 wipe: $(CERBERO)
