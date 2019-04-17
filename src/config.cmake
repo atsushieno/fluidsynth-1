@@ -4,6 +4,9 @@
 /* Define to enable ALSA driver */
 #cmakedefine ALSA_SUPPORT @ALSA_SUPPORT@
 
+/* Define to enable ANDROID_AMIDI driver */
+#cmakedefine ANDROID_AMIDI_SUPPORT @ANDROID_AMIDI_SUPPORT@
+
 /* Define to activate sound output to files */
 #cmakedefine AUFILE_SUPPORT @AUFILE_SUPPORT@
 
