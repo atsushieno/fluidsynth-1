@@ -29,6 +29,7 @@
 
 #if ANDROID_AMIDI_SUPPORT
 
+#include <sys/system_properties.h>
 #include "fluid_midi.h"
 #include "fluid_mdriver.h"
 #include "fluid_settings.h"
@@ -48,6 +49,7 @@ typedef struct
 
 static fluid_thread_return_t
 fluid_android_amidi_run(void* d);
+int getSdkVersion();
 
 /*
  * fluid_android_amidi_driver_settings
@@ -70,6 +72,9 @@ new_fluid_android_amidi_driver(fluid_settings_t *settings,
     AMidiOutputPort* outputPort;
     int portNumber;
     double deviceHandle; /* it is allocated in bigger unit than int so that long pointer can remain valid */
+
+	if (getSdkVersion() < __ANDROID_API_Q__) /* it might be built for > Q, and run on < Q. */
+	    return NULL;
 
     dev = FLUID_MALLOC(sizeof(fluid_android_amidi_driver_t));
 
@@ -166,6 +171,9 @@ void
 delete_fluid_android_amidi_driver(fluid_midi_driver_t *d)
 {
     fluid_android_amidi_driver_t *dev;
+
+	if (getSdkVersion() < __ANDROID_API_Q__) /* it might be built for > Q, and run on < Q. */
+	    return;
     
     dev = (fluid_android_amidi_driver_t*) d;
     
@@ -188,6 +196,19 @@ delete_fluid_android_amidi_driver(fluid_midi_driver_t *d)
         delete_fluid_midi_parser(dev->parser);
 
     FLUID_FREE(dev);
+}
+
+/* See https://github.com/google/oboe/blob/c278091/src/common/Utilities.cpp#L202 */
+int getSdkVersion()
+{
+    static int sCachedSdkVersion = -1;
+    if (sCachedSdkVersion == -1) {
+        char sdk[PROP_VALUE_MAX] = {0};
+        if (__system_property_get("ro.build.version.sdk", sdk) != 0) {
+            sCachedSdkVersion = atoi(sdk);
+        }
+    }
+    return sCachedSdkVersion;
 }
 
 #endif /* ANDROID_AMIDI_SUPPORT */

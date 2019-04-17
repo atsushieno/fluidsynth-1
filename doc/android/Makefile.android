@@ -43,10 +43,10 @@ $(OBOE):
 
 .PHONY: checkout-cerbero
 checkout-cerbero: $(CERBERO)
-	cd $(CERBERO) && git checkout 7a6fd79
+	cd $(CERBERO) && git checkout 8aa150b0
 
 $(CERBERO):
-	git clone https://github.com/atsushieno/cerbero.git $(CERBERO) && cd $(CERBERO) && git checkout 8aa150b0
+	git clone https://github.com/atsushieno/cerbero.git $(CERBERO)
 
 .PHONY: build
 build: \
