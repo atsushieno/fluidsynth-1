@@ -30,8 +30,8 @@ extern "C" {
 #include <fluidsynth/settings.h>
 
 void * Java_fluidsynth_androidextensions_NativeHandler_acquireMidiDeviceHandle(JNIEnv *env, jobject _this, jobject midiDevice);
-void Java_fluidsynth_androidextensions_NativeHandler_releaseAMidiDevice(void *amidi);
-void fluid_android_connect_midi_driver_to_synth(fluid_settings_t *settings, fluid_synth_t *synth, void *amidiDevice);
+void Java_fluidsynth_androidextensions_NativeHandler_releaseAMidiDevice(JNIEnv *env, jobject _this, void *amidi);
+void fluid_android_connect_midi_driver_to_synth(fluid_settings_t *settings, fluid_synth_t *synth, const void *amidi);
 
 #ifdef __cplusplus
 } /* extern "C" */
