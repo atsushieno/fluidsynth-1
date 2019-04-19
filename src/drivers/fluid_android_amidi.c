@@ -37,6 +37,10 @@
 
 #define AMIDI_RECEIVER_MAX_BYTES 0x10000;
 
+/*
+ * Those libamidi functions are dlopen() based, for the same reason as
+ * https://github.com/google/oboe/blob/c278091a/src/aaudio/AAudioLoader.h#L67
+ */
 typedef media_status_t (*fluid_amidi_output_open_func) (const AMidiDevice*, int32_t, AMidiOutputPort**);
 typedef void (*fluid_amidi_output_close_func) (const AMidiOutputPort*);
 typedef ssize_t (*fluid_amidi_output_receive_func) (const AMidiOutputPort*, int32_t*, uint8_t*, size_t, size_t*, int64_t*);
