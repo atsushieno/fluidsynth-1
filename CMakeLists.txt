@@ -636,7 +636,7 @@ endif ( enable-oboe )
 unset ( ANDROID_AMIDI_SUPPORT CACHE )
 if ( enable-android-amidi )
   check_include_file ( amidi/AMidi.h ANDROID_AMIDI_SUPPORT )
-  find_library ( ANDROID_AMIDI_LIBS amidi )
+  # do not find amidi library, it is not explicitly linked.
 else ( enable-android-amidi )
   unset ( ANDROID_AMIDI_LIBS CACHE )
 endif ( enable-android-amidi )

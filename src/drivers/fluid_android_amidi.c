@@ -29,6 +29,7 @@
 
 #if ANDROID_AMIDI_SUPPORT
 
+#include <dlfcn.h>
 #include <sys/system_properties.h>
 #include "fluid_midi.h"
 #include "fluid_mdriver.h"
@@ -36,8 +37,20 @@
 
 #define AMIDI_RECEIVER_MAX_BYTES 0x10000;
 
+typedef media_status_t (*fluid_amidi_output_open_func) (const AMidiDevice*, int32_t, AMidiOutputPort**);
+typedef void (*fluid_amidi_output_close_func) (const AMidiOutputPort*);
+typedef ssize_t (*fluid_amidi_output_receive_func) (const AMidiOutputPort*, int32_t*, uint8_t*, size_t, size_t*, int64_t*);
+typedef media_status_t (*fluid_amidi_device_release_func) (const AMidiDevice*);
+
+fluid_amidi_output_open_func amidi_open = NULL;
+fluid_amidi_output_receive_func amidi_receive = NULL;
+fluid_amidi_output_close_func amidi_close = NULL;
+fluid_amidi_device_release_func amidi_release = NULL;
+
+
 typedef struct
 {
+	void *libamidi;
     fluid_midi_driver_t driver;
     AMidiOutputPort* port; /* You know, this is the *input* receiver. Android API naming is selfish and subjective. */
     void *fluid_thread;
@@ -49,14 +62,16 @@ typedef struct
 
 static fluid_thread_return_t
 fluid_android_amidi_run(void* d);
-int getSdkVersion();
+
+static void *libamidi;
+static int libamidi_refcount;
 
 /*
  * fluid_android_amidi_driver_settings
  */
 void fluid_android_amidi_driver_settings(fluid_settings_t *settings)
 {
-    fluid_settings_register_int(settings, "midi.android-amidi.device-handle", 0, -0x80000000, 0x7FFFFFFF, 0);
+    fluid_settings_register_num(settings, "midi.android-amidi.device-handle", 0, -0x80000000, 0x7FFFFFFF, 0);
     fluid_settings_register_num(settings, "midi.android-amidi.port", 0, DBL_MIN, DBL_MAX, 0);
 }
 
@@ -73,8 +88,23 @@ new_fluid_android_amidi_driver(fluid_settings_t *settings,
     int portNumber;
     double deviceHandle; /* it is allocated in bigger unit than int so that long pointer can remain valid */
 
-	if (getSdkVersion() < __ANDROID_API_Q__) /* it might be built for > Q, and run on < Q. */
-	    return NULL;
+	if (!libamidi) {
+		libamidi = dlopen("libamidi.so", RTLD_NOW);
+		if (!libamidi) {
+			FLUID_LOG(FLUID_ERR, "Android Native MIDI platform shared library libamidi.so not found.");
+			return NULL;
+		}
+		amidi_open = (fluid_amidi_output_open_func) dlsym (libamidi, "AMidiOutputPort_open");
+		amidi_close = (fluid_amidi_output_close_func) dlsym (libamidi, "AMidiOutputPort_close");
+		amidi_receive = (fluid_amidi_output_receive_func) dlsym (libamidi, "AMidiOutputPort_receive");
+		amidi_release = (fluid_amidi_device_release_func) dlsym (libamidi, "AMidiDevice_release");
+		if (!amidi_open || !amidi_close || !amidi_receive || !amidi_release) {
+			FLUID_LOG(FLUID_ERR, "Failed to load Android Native MIDI platform shared library libamidi.so. Expected symbols not found");
+			dlclose(libamidi);
+			return NULL;
+		}
+	}
+	libamidi_refcount++;
 
     dev = FLUID_MALLOC(sizeof(fluid_android_amidi_driver_t));
 
@@ -106,9 +136,9 @@ new_fluid_android_amidi_driver(fluid_settings_t *settings,
     fluid_settings_getint (settings, "midi.android-amidi.port", &portNumber);
     fluid_settings_getnum (settings, "midi.android-amidi.device-handle", &deviceHandle);
 
-    device = (AMidiDevice*) (void*) (int) deviceHandle;
+    device = (AMidiDevice*) (void*) (long) deviceHandle;
     
-    if (AMidiOutputPort_open(device, portNumber, &outputPort) != AMEDIA_OK)
+    if (amidi_open(device, portNumber, &outputPort) != AMEDIA_OK)
     {
         FLUID_LOG(FLUID_ERR, "Could not open port %d", portNumber);
         goto error_recovery;
@@ -149,7 +179,7 @@ fluid_android_amidi_run(void* d)
         
     while (dev->reading)
     {
-        numMessages = AMidiOutputPort_receive(dev->port, &opcode, buf, dev->max_bytes, &numBytesReceived, &timestamp);
+        numMessages = amidi_receive(dev->port, &opcode, buf, dev->max_bytes, &numBytesReceived, &timestamp);
         
         for (bufIdx = 0; bufIdx < numBytesReceived; bufIdx++)
         {
@@ -172,9 +202,6 @@ delete_fluid_android_amidi_driver(fluid_midi_driver_t *d)
 {
     fluid_android_amidi_driver_t *dev;
 
-	if (getSdkVersion() < __ANDROID_API_Q__) /* it might be built for > Q, and run on < Q. */
-	    return;
-    
     dev = (fluid_android_amidi_driver_t*) d;
     
     if (dev == NULL)
@@ -185,9 +212,9 @@ delete_fluid_android_amidi_driver(fluid_midi_driver_t *d)
     if (dev->fluid_thread)
         fluid_thread_join(dev->fluid_thread);
 
-    AMidiOutputPort_close(dev->port);
+    amidi_close(dev->port);
     
-    AMidiDevice_release((AMidiDevice*) dev->driver.data);
+    amidi_release((AMidiDevice*) dev->driver.data);
     
     if (dev->receiver_buffer)
         FLUID_FREE(dev->receiver_buffer);
@@ -196,19 +223,10 @@ delete_fluid_android_amidi_driver(fluid_midi_driver_t *d)
         delete_fluid_midi_parser(dev->parser);
 
     FLUID_FREE(dev);
-}
 
-/* See https://github.com/google/oboe/blob/c278091/src/common/Utilities.cpp#L202 */
-int getSdkVersion()
-{
-    static int sCachedSdkVersion = -1;
-    if (sCachedSdkVersion == -1) {
-        char sdk[PROP_VALUE_MAX] = {0};
-        if (__system_property_get("ro.build.version.sdk", sdk) != 0) {
-            sCachedSdkVersion = atoi(sdk);
-        }
-    }
-    return sCachedSdkVersion;
+	libamidi_refcount--;
+	if (libamidi_refcount == 0)
+		dlclose(libamidi);
 }
 
 #endif /* ANDROID_AMIDI_SUPPORT */

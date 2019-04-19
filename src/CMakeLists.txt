@@ -139,7 +139,7 @@ endif ( OBOE_SUPPORT )
 if ( ANDROID_AMIDI_SUPPORT )
   set ( fluid_android_amidi_SOURCES drivers/fluid_android_amidi.c )
   include_directories ( ${ANDROID_AMIDI_INCLUDE_DIRS} )
-  link_libraries ( amidi )
+  # do not link amidi here, it is loaded via dlopen() for older platform compatibility.
 endif ( ANDROID_AMIDI_SUPPORT )
 
 set ( config_SOURCES ${CMAKE_BINARY_DIR}/config.h )
