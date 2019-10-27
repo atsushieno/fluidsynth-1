@@ -42,7 +42,7 @@ $(OBOE):
 
 .PHONY: checkout-cerbero
 checkout-cerbero: $(CERBERO)
-	cd $(CERBERO) && git checkout 0acd9b0
+	cd $(CERBERO) && git checkout 40bf995
 
 $(CERBERO):
 	git clone https://github.com/atsushieno/cerbero.git $(CERBERO)

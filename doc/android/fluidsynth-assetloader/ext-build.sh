@@ -4,7 +4,7 @@ ABIS="x86 x86_64 armeabi-v7a arm64-v8a"
 
 HOST_OS=`uname | tr [:upper:] [:lower:]`
 
-ANDROID_NDK_PATH=~/android-sdk-$HOST_OS/ndk-bundle
+ANDROID_NDK_PATH=../external/cerbero/build/android-ndk-18/
 CMAKEFILE=$ANDROID_NDK_PATH/build/cmake/android.toolchain.cmake
 
 for A_ABI in $ABIS ; do
