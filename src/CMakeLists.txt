@@ -368,6 +368,9 @@ target_link_libraries ( libfluidsynth
 
 # ************ CLI program ************
 
+if (ANDROID)
+else (ANDROID)
+
 set ( fluidsynth_SOURCES fluidsynth.c )
 
 add_executable ( fluidsynth
@@ -401,6 +404,8 @@ else ( MACOSX_FRAMEWORK )
    install ( FILES ${public_main_HEADER} DESTINATION ${INCLUDE_INSTALL_DIR} )
 endif ( MACOSX_FRAMEWORK )
 
+endif (ANDROID)
+
 # ******* Auto Generated Lookup Tables ******
 
 include(ExternalProject)
@@ -423,3 +428,4 @@ ExternalProject_Add(gentables
     INSTALL_COMMAND ${GENTAB_BDIR}/make_tables.exe "${CMAKE_BINARY_DIR}/"
 )
 add_dependencies(libfluidsynth-OBJ gentables)
+

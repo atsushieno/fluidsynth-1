@@ -17,7 +17,7 @@ CERBERO=$(PWD)/external/cerbero
 OBOE=$(PWD)/external/oboe
 CMAKE=cmake
 
-ANDROID_NDK = $(PWD)/external/cerbero/build/android-ndk-18
+ANDROID_NDK = $(PWD)/external/cerbero/build/android-ndk-21
 
 ABIS_SIMPLE = x86 x86-64 armv7 arm64
 
@@ -42,7 +42,7 @@ $(OBOE):
 
 .PHONY: checkout-cerbero
 checkout-cerbero: $(CERBERO)
-	cd $(CERBERO) && git checkout 0acd9b0
+	cd $(CERBERO) && git checkout 1f9fea6
 
 $(CERBERO):
 	git clone https://github.com/atsushieno/cerbero.git $(CERBERO)
