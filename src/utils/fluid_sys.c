@@ -60,6 +60,10 @@ typedef struct
 struct _fluid_timer_t
 {
     long msec;
+
+    // Pointer to a function to be executed by the timer.
+    // This field is set to NULL once the timer is finished to indicate completion.
+    // This allows for timed waits, rather than waiting forever as fluid_timer_join() does.
     fluid_timer_callback_t callback;
     void *data;
     fluid_thread_t *thread;
@@ -218,9 +222,73 @@ void* fluid_alloc(size_t len)
 }
 
 /**
+ * Open a file with a UTF-8 string, even in Windows
+ * @param filename The name of the file to open
+ * @param mode The mode to open the file in
+ */
+FILE *fluid_fopen(const char *filename, const char *mode)
+{
+#if defined(WIN32)
+    wchar_t *wpath = NULL, *wmode = NULL;
+    FILE *file = NULL;
+    int length;
+    if ((length = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, filename, -1, NULL, 0)) == 0)
+    {
+        FLUID_LOG(FLUID_ERR, "Unable to perform MultiByteToWideChar() conversion for filename '%s'. Error was: '%s'", filename, fluid_get_windows_error());
+        errno = EINVAL;
+        goto error_recovery;
+    }
+    
+    wpath = FLUID_MALLOC(length * sizeof(wchar_t));
+    if (wpath == NULL)
+    {
+        FLUID_LOG(FLUID_PANIC, "Out of memory.");
+        errno = EINVAL;
+        goto error_recovery;
+    }
+
+    MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, filename, -1, wpath, length);
+
+    if ((length = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, mode, -1, NULL, 0)) == 0)
+    {
+        FLUID_LOG(FLUID_ERR, "Unable to perform MultiByteToWideChar() conversion for mode '%s'. Error was: '%s'", mode, fluid_get_windows_error());
+        errno = EINVAL;
+        goto error_recovery;
+    }
+
+    wmode = FLUID_MALLOC(length * sizeof(wchar_t));
+    if (wmode == NULL)
+    {
+        FLUID_LOG(FLUID_PANIC, "Out of memory.");
+        errno = EINVAL;
+        goto error_recovery;
+    }
+
+    MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, mode, -1, wmode, length);
+
+    file = _wfopen(wpath, wmode);
+
+error_recovery:
+    FLUID_FREE(wpath);
+    FLUID_FREE(wmode);
+
+    return file;
+#else
+    return fopen(filename, mode);
+#endif
+}
+
+/**
  * Convenience wrapper for free() that satisfies at least C90 requirements.
- * Especially useful when using fluidsynth with programming languages that do not provide malloc() and free().
- * @note Only use this function when the API documentation explicitly says so. Otherwise use adequate \c delete_fluid_* functions.
+ *
+ * @param ptr Pointer to memory region that should be freed
+ *
+ * Especially useful when using fluidsynth with programming languages that do not
+ * provide malloc() and free().
+ *
+ * @note Only use this function when the API documentation explicitly says so. Otherwise use
+ * adequate \c delete_fluid_* functions.
+ *
  * @since 2.0.7
  */
 void fluid_free(void* ptr)
@@ -976,7 +1044,7 @@ new_fluid_thread(const char *name, fluid_thread_func_t func, void *data, int pri
 #if OLD_GLIB_THREAD_API
 
     /* Make sure g_thread_init has been called.
-     * FIXME - Probably not a good idea in a shared library,
+     * Probably not a good idea in a shared library,
      * but what can we do *and* remain backwards compatible? */
     if(!g_thread_supported())
     {
@@ -1096,6 +1164,7 @@ fluid_timer_run(void *data)
     }
 
     FLUID_LOG(FLUID_DBG, "Timer thread finished");
+    timer->callback = NULL;
 
     if(timer->auto_destroy)
     {
@@ -1187,6 +1256,19 @@ fluid_timer_join(fluid_timer_t *timer)
     }
 
     return FLUID_OK;
+}
+
+int
+fluid_timer_is_running(const fluid_timer_t *timer)
+{
+    // for unit test usage only
+    return timer->callback != NULL;
+}
+
+long fluid_timer_get_interval(const fluid_timer_t * timer)
+{
+    // for unit test usage only
+    return timer->msec;
 }
 
 
@@ -1692,3 +1774,28 @@ fluid_long_long_t fluid_file_tell(FILE* f)
     return ftell(f);
 #endif
 }
+
+#ifdef WIN32
+// not thread-safe!
+char* fluid_get_windows_error(void)
+{
+    static TCHAR err[1024];
+
+    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+                  NULL,
+                  GetLastError(),
+                  MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
+                  err,
+                  sizeof(err)/sizeof(err[0]),
+                  NULL);
+
+#ifdef _UNICODE
+    static char ascii_err[sizeof(err)];
+
+    WideCharToMultiByte(CP_UTF8, 0, err, -1, ascii_err, sizeof(ascii_err)/sizeof(ascii_err[0]), 0, 0);
+    return ascii_err;
+#else
+    return err;
+#endif
+}
+#endif

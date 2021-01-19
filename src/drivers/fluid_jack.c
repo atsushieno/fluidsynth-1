@@ -60,8 +60,6 @@ struct _fluid_jack_audio_driver_t
     fluid_audio_driver_t driver;
     fluid_jack_client_t *client_ref;
 
-    int audio_channels;
-
     jack_port_t **output_ports;
     int num_output_ports;
     float **output_bufs;
@@ -503,9 +501,7 @@ fluid_jack_client_register_ports(void *driver, int isaudio, jack_client_t *clien
         {
             FLUID_LOG(FLUID_INFO, "Jack sample rate mismatch, adjusting."
                   " (synth.sample-rate=%lu, jackd=%lu)", (unsigned long)sample_rate, jack_srate);
-            fluid_synth_set_sample_rate(synth, jack_srate);
-            /* Changing sample rate is non RT, so make sure we process it and/or other things now */
-            fluid_synth_process_event_queue(synth);
+            fluid_synth_set_sample_rate_immediately(synth, jack_srate);
         }
         else
         {
@@ -610,9 +606,6 @@ new_fluid_jack_audio_driver2(fluid_settings_t *settings, fluid_audio_func_t func
     client = dev->client_ref->client;
 
     /* connect the ports. */
-
-
-    /* FIXME: should be done by a patchbay application */
 
     /* find some physical ports and connect to them */
     fluid_settings_getint(settings, "audio.jack.autoconnect", &autoconnect);
@@ -755,6 +748,7 @@ fluid_jack_driver_process(jack_nframes_t nframes, void *arg)
     }
     else
     {
+        int res;
         fluid_audio_func_t callback = (audio_driver->callback != NULL) ? audio_driver->callback : (fluid_audio_func_t) fluid_synth_process;
 
         for(i = 0; i < audio_driver->num_output_ports; i++)
@@ -781,12 +775,18 @@ fluid_jack_driver_process(jack_nframes_t nframes, void *arg)
             FLUID_MEMSET(audio_driver->fx_bufs[k], 0, nframes * sizeof(float));
         }
 
-        return callback(audio_driver->data,
+        res = callback(audio_driver->data,
                         nframes,
                         audio_driver->num_fx_ports * 2,
                         audio_driver->fx_bufs,
                         audio_driver->num_output_ports * 2,
                         audio_driver->output_bufs);
+        if(res != FLUID_OK)
+        {
+            const char *cb_func_name = (audio_driver->callback != NULL) ? "Custom audio callback function" : "fluid_synth_process()";
+            FLUID_LOG(FLUID_PANIC, "%s returned an error. As a consequence, fluidsynth will now be removed from Jack's processing loop.", cb_func_name);
+        }
+        return res;
     }
 }
 
