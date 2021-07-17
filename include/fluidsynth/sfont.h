@@ -303,7 +303,8 @@ typedef int (*fluid_preset_get_num_t)(fluid_preset_t *preset);
  * start playing the synthesis voice.  Starting with FluidSynth 1.1.0 all voices
  * created will be started at the same time.
  */
-typedef int (*fluid_preset_noteon_t)(fluid_preset_t *preset, fluid_synth_t *synth, int chan, int key, int vel);
+typedef int (*fluid_preset_noteon_t)(fluid_preset_t *preset, fluid_synth_t *synth, int chan, int key, int vel7);
+typedef int (*fluid_preset_noteon2_t)(fluid_preset_t *preset, fluid_synth_t *synth, int chan, int key, int vel16);
 
 /**
  * Method to free a virtual SoundFont preset.
@@ -323,6 +324,12 @@ FLUIDSYNTH_API fluid_preset_t *new_fluid_preset(fluid_sfont_t *parent_sfont,
         fluid_preset_get_banknum_t get_bank,
         fluid_preset_get_num_t get_num,
         fluid_preset_noteon_t noteon,
+        fluid_preset_free_t free);
+FLUIDSYNTH_API fluid_preset_t *new_fluid_preset2(fluid_sfont_t *parent_sfont,
+        fluid_preset_get_name_t get_name,
+        fluid_preset_get_banknum_t get_bank,
+        fluid_preset_get_num_t get_num,
+        fluid_preset_noteon2_t noteon2,
         fluid_preset_free_t free);
 FLUIDSYNTH_API void delete_fluid_preset(fluid_preset_t *preset);
 /** @endlifecycle */

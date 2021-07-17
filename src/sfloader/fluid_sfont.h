@@ -41,8 +41,10 @@ int fluid_sample_sanitize_loop(fluid_sample_t *sample, unsigned int max_end);
 #define fluid_preset_delete_internal(_preset) \
   { if ((_preset) && (_preset)->free) { (*(_preset)->free)(_preset); }}
 
-#define fluid_preset_noteon(_preset,_synth,_ch,_key,_vel) \
-  (*(_preset)->noteon)(_preset,_synth,_ch,_key,_vel)
+#define fluid_preset_noteon(_preset,_synth,_ch,_key,_vel16) \
+  ((_preset)->noteon ?                                      \
+     (*(_preset)->noteon)(_preset,_synth,_ch,_key,fluid_midi2_get_midi1_velocity(_vel16)) : \
+     (*(_preset)->noteon2)(_preset,_synth,_ch,_key,_vel16))
 
 #define fluid_preset_notify(_preset,_reason,_chan) \
   ( ((_preset) && (_preset)->notify) ? (*(_preset)->notify)(_preset,_reason,_chan) : FLUID_OK )
@@ -122,6 +124,7 @@ struct _fluid_preset_t
     fluid_preset_get_num_t get_num;
 
     fluid_preset_noteon_t noteon;
+    fluid_preset_noteon2_t noteon2;
 
     /**
      * Virtual SoundFont preset notify method.
@@ -185,5 +188,12 @@ struct _fluid_sample_t
     int (*notify)(fluid_sample_t *sample, int reason);
 };
 
+fluid_preset_t *new_fluid_preset_LOCAL(fluid_sfont_t *parent_sfont,
+                                 fluid_preset_get_name_t get_name,
+                                 fluid_preset_get_banknum_t get_bank,
+                                 fluid_preset_get_num_t get_num,
+                                 fluid_preset_noteon_t noteon,
+                                 fluid_preset_noteon2_t noteon2,
+                                 fluid_preset_free_t free);
 
 #endif /* _PRIV_FLUID_SFONT_H */

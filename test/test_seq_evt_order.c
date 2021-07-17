@@ -34,7 +34,7 @@ int main(void)
     TEST_ASSERT(!!event_compare_for_test(evt1, evt2));
     TEST_ASSERT( !event_compare_for_test(evt2, evt1));
 
-    // make sure noteons with vel=0 are handled like noteoffs
+    // make sure noteons with vel16=0 are handled like noteoffs
     fluid_event_noteon(evt1, 0, 0, 60);
     fluid_event_noteon(evt2, 0, 0, 0);
 

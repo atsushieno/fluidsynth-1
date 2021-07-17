@@ -82,10 +82,14 @@ FLUIDSYNTH_API void fluid_event_timer(fluid_event_t *evt, void *data);
 
 /* Note events */
 FLUIDSYNTH_API void fluid_event_note(fluid_event_t *evt, int channel,
-                                     short key, short vel,
+                                     short key, short vel7,
+                                     unsigned int duration);
+FLUIDSYNTH_API void fluid_event_note2(fluid_event_t *evt, int channel,
+                                     short key, unsigned short vel16,
                                      unsigned int duration);
 
-FLUIDSYNTH_API void fluid_event_noteon(fluid_event_t *evt, int channel, short key, short vel);
+FLUIDSYNTH_API void fluid_event_noteon(fluid_event_t *evt, int channel, short key, short vel7);
+FLUIDSYNTH_API void fluid_event_noteon2(fluid_event_t *evt, int channel, short key, unsigned short vel16);
 FLUIDSYNTH_API void fluid_event_noteoff(fluid_event_t *evt, int channel, short key);
 FLUIDSYNTH_API void fluid_event_all_sounds_off(fluid_event_t *evt, int channel);
 FLUIDSYNTH_API void fluid_event_all_notes_off(fluid_event_t *evt, int channel);
@@ -125,6 +129,7 @@ FLUIDSYNTH_API fluid_seq_id_t fluid_event_get_dest(fluid_event_t *evt);
 FLUIDSYNTH_API int fluid_event_get_channel(fluid_event_t *evt);
 FLUIDSYNTH_API short fluid_event_get_key(fluid_event_t *evt);
 FLUIDSYNTH_API short fluid_event_get_velocity(fluid_event_t *evt);
+FLUIDSYNTH_API unsigned short fluid_event_get_velocity2(fluid_event_t *evt);
 FLUIDSYNTH_API short fluid_event_get_control(fluid_event_t *evt);
 FLUIDSYNTH_API int fluid_event_get_value(fluid_event_t *evt);
 FLUIDSYNTH_API int fluid_event_get_program(fluid_event_t *evt);

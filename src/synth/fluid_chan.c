@@ -437,7 +437,7 @@ fluid_channel_update_legato_staccato_state(fluid_channel_t *chan)
 */
 void
 fluid_channel_add_monolist(fluid_channel_t *chan, unsigned char key,
-                           unsigned char vel, unsigned char onenote)
+                           unsigned short vel16, unsigned char onenote)
 {
     unsigned char i_last = chan->i_last;
     /* Updates legato/ staccato playing state */
@@ -453,7 +453,7 @@ fluid_channel_add_monolist(fluid_channel_t *chan, unsigned char key,
     i_last = chan->monolist[i_last].next;
     chan->i_last = i_last; 			/* now ilast indexes the last note */
     chan->monolist[i_last].note = key; /* we save note and velocity */
-    chan->monolist[i_last].vel = vel;
+    chan->monolist[i_last].vel16 = vel16;
 
     if(onenote)
     {
@@ -620,15 +620,15 @@ void fluid_channel_clear_monolist(fluid_channel_t *chan)
  * keeping only this note.
  * @param
  *   chan  fluid_channel_t.
- *   key, vel, note and velocity added in the monolist
+ *   key, vel16, note and velocity added in the monolist
  * Note: i_last index keeps a trace of the most recent note inserted.
  *       prev_note keeps a trace of the note prior i_last note.
  *       FLUID_CHANNEL_LEGATO_PLAYING bit keeps trace of legato/staccato playing.
  */
 void fluid_channel_set_onenote_monolist(fluid_channel_t *chan, unsigned char key,
-                                        unsigned char vel)
+                                        unsigned short vel16)
 {
-    fluid_channel_add_monolist(chan, key, vel, 1);
+    fluid_channel_add_monolist(chan, key, vel16, 1);
 }
 
 /**

@@ -589,7 +589,7 @@ fluid_midi_router_handle_midi_event(void *data, fluid_midi_event_t *event)
     int event_par2;
     fluid_midi_event_t new_event;
 
-    /* Some keyboards report noteoff through a noteon event with vel=0.
+    /* Some keyboards report noteoff through a noteon event with vel16=0.
      * Convert those to noteoff to ease processing. */
     if(event->type == NOTE_ON && event->param2 == 0)
     {

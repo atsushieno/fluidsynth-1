@@ -186,7 +186,7 @@ fluid_seq_fluidsynth_callback(unsigned int time, fluid_event_t *evt, fluid_seque
     switch(fluid_event_get_type(evt))
     {
     case FLUID_SEQ_NOTEON:
-        fluid_synth_noteon(synth, fluid_event_get_channel(evt), fluid_event_get_key(evt), fluid_event_get_velocity(evt));
+        fluid_synth_noteon2(synth, fluid_event_get_channel(evt), fluid_event_get_key(evt), fluid_event_get_velocity2(evt));
         break;
 
     case FLUID_SEQ_NOTEOFF:
@@ -203,7 +203,7 @@ fluid_seq_fluidsynth_callback(unsigned int time, fluid_event_t *evt, fluid_seque
     case FLUID_SEQ_NOTE:
     {
         unsigned int dur = fluid_event_get_duration(evt);
-        short vel = fluid_event_get_velocity(evt);
+        short vel16 = fluid_event_get_velocity2(evt);
         short key = fluid_event_get_key(evt);
         int chan = fluid_event_get_channel(evt);
 
@@ -236,7 +236,7 @@ fluid_seq_fluidsynth_callback(unsigned int time, fluid_event_t *evt, fluid_seque
             return;
         }
 
-        fluid_synth_noteon(synth, chan, key, vel);
+        fluid_synth_noteon2(synth, chan, key, vel16);
     }
     break;
 

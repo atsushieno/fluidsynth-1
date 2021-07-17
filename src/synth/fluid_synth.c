@@ -1270,28 +1270,33 @@ int fluid_synth_set_protocol(fluid_synth_t *synth, enum fluid_midi_ci_protocol p
  * @return #FLUID_OK on success, #FLUID_FAILED otherwise
  */
 int
-fluid_synth_noteon(fluid_synth_t *synth, int chan, int key, int vel)
+fluid_synth_noteon(fluid_synth_t *synth, int chan, int key, int vel7)
+{
+    return fluid_synth_noteon2(synth, chan, key, fluid_midi2_get_midi2_velocity(vel7));
+}
+int
+fluid_synth_noteon2(fluid_synth_t *synth, int chan, int key, int vel16)
 {
     int result;
     fluid_return_val_if_fail(key >= 0 && key <= 127, FLUID_FAILED);
-    fluid_return_val_if_fail(vel >= 0 && vel <= 127, FLUID_FAILED);
+    fluid_return_val_if_fail(vel16 >= 0 && vel16 <= 65535, FLUID_FAILED);
     FLUID_API_ENTRY_CHAN(FLUID_FAILED);
 
     /* Allowed only on MIDI channel enabled */
     FLUID_API_RETURN_IF_CHAN_DISABLED(FLUID_FAILED);
 
-    result = fluid_synth_noteon_LOCAL(synth, chan, key, vel);
+    result = fluid_synth_noteon_LOCAL(synth, chan, key, vel16);
     FLUID_API_RETURN(result);
 }
 
 /* Local synthesis thread variant of fluid_synth_noteon */
 static int
-fluid_synth_noteon_LOCAL(fluid_synth_t *synth, int chan, int key, int vel)
+fluid_synth_noteon_LOCAL(fluid_synth_t *synth, int chan, int key, int vel16)
 {
     fluid_channel_t *channel ;
 
     /* notes with velocity zero go to noteoff  */
-    if(vel == 0)
+    if(vel16 == 0)
     {
         return fluid_synth_noteoff_LOCAL(synth, chan, key);
     }
@@ -1304,7 +1309,7 @@ fluid_synth_noteon_LOCAL(fluid_synth_t *synth, int chan, int key, int vel)
         if(synth->verbose)
         {
             FLUID_LOG(FLUID_INFO, "noteon\t%d\t%d\t%d\t%05d\t%.3f\t%.3f\t%.3f\t%d\t%s",
-                      chan, key, vel, 0,
+                      chan, key, vel16, 0,
                       fluid_synth_get_ticks(synth) / 44100.0f,
                       (fluid_curtime() - synth->start) / 1000.0f,
                       0.0f, 0, "channel has no preset");
@@ -1316,7 +1321,7 @@ fluid_synth_noteon_LOCAL(fluid_synth_t *synth, int chan, int key, int vel)
     if(fluid_channel_is_playing_mono(channel)) /* channel is mono or legato CC is On) */
     {
         /* play the noteOn in monophonic */
-        return fluid_synth_noteon_mono_LOCAL(synth, chan, key, vel);
+        return fluid_synth_noteon_mono_LOCAL(synth, chan, key, vel16);
     }
     else
     {
@@ -1329,7 +1334,7 @@ fluid_synth_noteon_LOCAL(fluid_synth_t *synth, int chan, int key, int vel)
          with the previous note poly (if the musician choose this).
             */
         fluid_channel_set_onenote_monolist(channel, (unsigned char) key,
-                                           (unsigned char) vel);
+                                           (unsigned short) vel16);
 
         /* If there is another voice process on the same channel and key,
            advance it to the release phase. */
@@ -1341,7 +1346,7 @@ fluid_synth_noteon_LOCAL(fluid_synth_t *synth, int chan, int key, int vel)
           a MIDI specification (see FluidPolymono-0004.pdf chapter 4.3-a ,3.4.11
           for details).
         */
-        return fluid_synth_noteon_monopoly_legato(synth, chan, INVALID_NOTE, key, vel);
+        return fluid_synth_noteon_monopoly_legato(synth, chan, INVALID_NOTE, key, vel16);
     }
 }
 
@@ -5115,17 +5120,17 @@ fluid_synth_free_voice_by_kill_LOCAL(fluid_synth_t *synth)
  */
 fluid_voice_t *
 fluid_synth_alloc_voice(fluid_synth_t *synth, fluid_sample_t *sample,
-                        int chan, int key, int vel)
+                        int chan, int key, int vel16)
 {
     fluid_return_val_if_fail(sample != NULL, NULL);
     fluid_return_val_if_fail(sample->data != NULL, NULL);
     FLUID_API_ENTRY_CHAN(NULL);
-    FLUID_API_RETURN(fluid_synth_alloc_voice_LOCAL(synth, sample, chan, key, vel, NULL));
+    FLUID_API_RETURN(fluid_synth_alloc_voice_LOCAL(synth, sample, chan, key, vel16, NULL));
 
 }
 
 fluid_voice_t *
-fluid_synth_alloc_voice_LOCAL(fluid_synth_t *synth, fluid_sample_t *sample, int chan, int key, int vel, fluid_zone_range_t *zone_range)
+fluid_synth_alloc_voice_LOCAL(fluid_synth_t *synth, fluid_sample_t *sample, int chan, int key, int vel16, fluid_zone_range_t *zone_range)
 {
     int i, k;
     fluid_voice_t *voice = NULL;
@@ -5170,7 +5175,7 @@ fluid_synth_alloc_voice_LOCAL(fluid_synth_t *synth, fluid_sample_t *sample, int 
         }
 
         FLUID_LOG(FLUID_INFO, "noteon\t%d\t%d\t%d\t%05d\t%.3f\t%.3f\t%.3f\t%d",
-                  chan, key, vel, synth->storeid,
+                  chan, key, vel16, synth->storeid,
                   (float) ticks / 44100.0f,
                   (fluid_curtime() - synth->start) / 1000.0f,
                   0.0f,
@@ -5179,7 +5184,7 @@ fluid_synth_alloc_voice_LOCAL(fluid_synth_t *synth, fluid_sample_t *sample, int 
 
     channel = synth->channel[chan];
 
-    if(fluid_voice_init(voice, sample, zone_range, channel, key, vel,
+    if(fluid_voice_init(voice, sample, zone_range, channel, key, vel16,
                         synth->storeid, ticks, synth->gain) != FLUID_OK)
     {
         FLUID_LOG(FLUID_WARN, "Failed to initialize voice");
@@ -7652,12 +7657,19 @@ fluid_synth_handle_midi_event(void *data, fluid_midi_event_t *event)
  */
 int
 fluid_synth_start(fluid_synth_t *synth, unsigned int id, fluid_preset_t *preset,
-                  int audio_chan, int chan, int key, int vel)
+                  int audio_chan, int chan, int key, int vel7)
+{
+    fluid_synth_start2(synth, id, preset, audio_chan, chan, key, fluid_midi2_get_midi2_velocity(vel7));
+}
+
+int
+fluid_synth_start2(fluid_synth_t *synth, unsigned int id, fluid_preset_t *preset,
+                  int audio_chan, int chan, int key, int vel16)
 {
     int result, dynamic_samples;
     fluid_return_val_if_fail(preset != NULL, FLUID_FAILED);
     fluid_return_val_if_fail(key >= 0 && key <= 127, FLUID_FAILED);
-    fluid_return_val_if_fail(vel >= 1 && vel <= 127, FLUID_FAILED);
+    fluid_return_val_if_fail(vel16 >= 1 && vel16 <= 65535, FLUID_FAILED);
     FLUID_API_ENTRY_CHAN(FLUID_FAILED);
 
     fluid_settings_getint(fluid_synth_get_settings(synth), "synth.dynamic-sample-loading", &dynamic_samples);
@@ -7677,7 +7689,7 @@ fluid_synth_start(fluid_synth_t *synth, unsigned int id, fluid_preset_t *preset,
     else
     {
         synth->storeid = id;
-        result = fluid_preset_noteon(preset, synth, chan, key, vel);
+        result = fluid_preset_noteon(preset, synth, chan, key, vel16);
     }
 
     FLUID_API_RETURN(result);

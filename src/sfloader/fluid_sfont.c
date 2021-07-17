@@ -372,13 +372,34 @@ fluid_preset_t *new_fluid_preset(fluid_sfont_t *parent_sfont,
                                  fluid_preset_noteon_t noteon,
                                  fluid_preset_free_t free)
 {
+    return new_fluid_preset_LOCAL(parent_sfont, get_name, get_bank, get_num, noteon, NULL, free);
+}
+
+fluid_preset_t *new_fluid_preset2(fluid_sfont_t *parent_sfont,
+                                 fluid_preset_get_name_t get_name,
+                                 fluid_preset_get_banknum_t get_bank,
+                                 fluid_preset_get_num_t get_num,
+                                 fluid_preset_noteon2_t noteon,
+                                 fluid_preset_free_t free)
+{
+    return new_fluid_preset_LOCAL(parent_sfont, get_name, get_bank, get_num, NULL, noteon, free);
+}
+
+fluid_preset_t *new_fluid_preset_LOCAL(fluid_sfont_t *parent_sfont,
+                                  fluid_preset_get_name_t get_name,
+                                  fluid_preset_get_banknum_t get_bank,
+                                  fluid_preset_get_num_t get_num,
+                                  fluid_preset_noteon_t noteon,
+                                  fluid_preset_noteon2_t noteon2,
+                                  fluid_preset_free_t free)
+{
     fluid_preset_t *preset;
 
     fluid_return_val_if_fail(parent_sfont != NULL, NULL);
     fluid_return_val_if_fail(get_name != NULL, NULL);
     fluid_return_val_if_fail(get_bank != NULL, NULL);
     fluid_return_val_if_fail(get_num != NULL, NULL);
-    fluid_return_val_if_fail(noteon != NULL, NULL);
+    fluid_return_val_if_fail(noteon != NULL || noteon2 != NULL, NULL);
     fluid_return_val_if_fail(free != NULL, NULL);
 
     preset = FLUID_NEW(fluid_preset_t);
@@ -396,6 +417,7 @@ fluid_preset_t *new_fluid_preset(fluid_sfont_t *parent_sfont,
     preset->get_banknum = get_bank;
     preset->get_num = get_num;
     preset->noteon = noteon;
+    preset->noteon2 = noteon2;
     preset->free = free;
 
     return preset;

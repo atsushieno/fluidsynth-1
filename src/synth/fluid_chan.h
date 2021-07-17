@@ -66,7 +66,7 @@ struct mononote
 {
     unsigned char next; /* next note */
     unsigned char note; /* note */
-    unsigned char vel;  /* velocity */
+    unsigned short vel16;  /* velocity */ // checked all usages
 };
 
 /*
@@ -225,7 +225,7 @@ fluid_real_t fluid_channel_get_key_pitch(fluid_channel_t *chan, int key);
 #define fluid_channel_last_note(chan)	(chan->monolist[chan->i_last].note)
 
 /* Returns the most recent velocity from i_last entry of the monophonic list */
-#define fluid_channel_last_vel(chan)	(chan->monolist[chan->i_last].vel)
+#define fluid_channel_last_vel(chan)	(chan->monolist[chan->i_last].vel16)
 
 /*
   prev_note is used to determine fromkey_portamento as well as
@@ -263,11 +263,11 @@ enum fluid_channel_mode_flags_internal
 
 /* End of interface to monophonic list variables */
 
-void fluid_channel_add_monolist(fluid_channel_t *chan, unsigned char key, unsigned char vel, unsigned char onenote);
+void fluid_channel_add_monolist(fluid_channel_t *chan, unsigned char key, unsigned short vel, unsigned char onenote);
 int fluid_channel_search_monolist(fluid_channel_t *chan, unsigned char key, int *i_prev);
 void fluid_channel_remove_monolist(fluid_channel_t *chan, int i, int *i_prev);
 void fluid_channel_clear_monolist(fluid_channel_t *chan);
-void fluid_channel_set_onenote_monolist(fluid_channel_t *chan, unsigned char key, unsigned char vel);
+void fluid_channel_set_onenote_monolist(fluid_channel_t *chan, unsigned char key, unsigned short vel);
 void fluid_channel_invalid_prev_note_staccato(fluid_channel_t *chan);
 void fluid_channel_cc_legato(fluid_channel_t *chan, int value);
 void fluid_channel_cc_breath_note_on_off(fluid_channel_t *chan, int value);

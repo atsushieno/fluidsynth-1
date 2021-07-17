@@ -324,12 +324,12 @@ static char fluid_synth_get_fromkey_portamento_legato(fluid_channel_t *chan,
  * @return FLUID_OK on success, FLUID_FAILED otherwise.
  */
 int fluid_synth_noteon_mono_LOCAL(fluid_synth_t *synth, int chan,
-                                  int key,  int vel)
+                                  int key,  int vel16)
 {
     fluid_channel_t *channel = synth->channel[chan];
 
     /* Adds the note into the monophonic list */
-    fluid_channel_add_monolist(channel, key, vel, 0);
+    fluid_channel_add_monolist(channel, key, vel16, 0);
 
     /* in Breath Sync mode, the noteon triggering is postponed
        until the musician starts blowing in the breath controller */
@@ -344,12 +344,12 @@ int fluid_synth_noteon_mono_LOCAL(fluid_synth_t *synth, int chan,
             /* the voices from prev_note key number are to be used to play key number */
             /* fromkey must be valid */
             return 	fluid_synth_noteon_monopoly_legato(synth, chan,
-                    fluid_channel_prev_note(channel), key, vel);
+                    fluid_channel_prev_note(channel), key, vel16);
         }
         else
         {
             /* staccato playing */
-            return fluid_synth_noteon_mono_staccato(synth, chan, key, vel);
+            return fluid_synth_noteon_mono_staccato(synth, chan, key, vel16);
         }
     }
     else
@@ -421,7 +421,7 @@ int fluid_synth_noteoff_mono_LOCAL(fluid_synth_t *synth, int chan, int key)
                     play i_prev key number. */
                     status = fluid_synth_noteon_monopoly_legato(synth, chan,
                              key, channel->monolist[i_prev].note,
-                             channel->monolist[i_prev].vel);
+                             channel->monolist[i_prev].vel16);
                 }
                 /* else the note doesn't need to be played off */
                 else
@@ -487,11 +487,11 @@ int fluid_synth_noteoff_mono_LOCAL(fluid_synth_t *synth, int chan, int key)
  * @param synth instance.
  * @param chan MIDI channel number (0 to MIDI channel count - 1).
  * @param key MIDI note number (0-127).
- * @param vel MIDI velocity (0-127).
+ * @param vel MIDI velocity (0-65535).
  * @return FLUID_OK on success, FLUID_FAILED otherwise.
  */
 int
-fluid_synth_noteon_mono_staccato(fluid_synth_t *synth, int chan, int key, int vel)
+fluid_synth_noteon_mono_staccato(fluid_synth_t *synth, int chan, int key, int vel16)
 {
     fluid_channel_t *channel = synth->channel[chan];
 
@@ -501,7 +501,7 @@ fluid_synth_noteon_mono_staccato(fluid_synth_t *synth, int chan, int key, int ve
     /* Get possible 'fromkey portamento'   */
     fluid_synth_get_fromkey_portamento_legato(channel, INVALID_NOTE);
     /* The note needs to be played by voices allocation  */
-    return fluid_preset_noteon(channel->preset, synth, chan, key, vel);
+    return fluid_preset_noteon(channel->preset, synth, chan, key, vel16);
 }
 
 /**
@@ -650,14 +650,16 @@ int fluid_synth_noteoff_monopoly(fluid_synth_t *synth, int chan, int key,
  * More information in FluidPolyMono-0004.pdf chapter 4.7 (Appendices).
  */
 int fluid_synth_noteon_monopoly_legato(fluid_synth_t *synth, int chan,
-                                       int fromkey, int tokey, int vel)
+                                       int fromkey, int tokey, int vel16)
 {
     fluid_channel_t *channel = synth->channel[chan];
     enum fluid_channel_legato_mode legatomode = channel->legatomode;
     fluid_voice_t *voice;
     int i ;
+    int vel7;
     /* Gets possible 'fromkey portamento' and possible 'fromkey legato' note  */
     fromkey = fluid_synth_get_fromkey_portamento_legato(channel, fromkey);
+    vel7 = fluid_midi2_get_midi1_velocity(vel16);
 
     if(fluid_channel_is_valid_note(fromkey))
     {
@@ -674,7 +676,7 @@ int fluid_synth_noteon_monopoly_legato(fluid_synth_t *synth, int chan,
 
                 /* Ignores voice when there is no instrument zone (i.e no zone_range). Otherwise
                    checks if tokey is inside the range of the running voice */
-                if(zone_range && fluid_zone_inside_range(zone_range, tokey, vel))
+                if(zone_range && fluid_zone_inside_range(zone_range, tokey, vel7))
                 {
                     switch(legatomode)
                     {
@@ -684,7 +686,7 @@ int fluid_synth_noteon_monopoly_legato(fluid_synth_t *synth, int chan,
 
                     case FLUID_CHANNEL_LEGATO_MODE_MULTI_RETRIGGER: /* mode 1 */
                         /* Skip in attack section */
-                        fluid_voice_update_multi_retrigger_attack(voice, tokey, vel);
+                        fluid_voice_update_multi_retrigger_attack(voice, tokey, vel16);
 
                         /* Starts portamento if enabled */
                         if(fluid_channel_is_valid_note(synth->fromkey_portamento))
@@ -718,5 +720,5 @@ int fluid_synth_noteon_monopoly_legato(fluid_synth_t *synth, int chan,
 
     /* May be,tokey will enter in new others Insrument Zone(s),Preset Zone(s), in
        this case it needs to be played by voices allocation  */
-    return fluid_preset_noteon(channel->preset, synth, chan, tokey, vel);
+    return fluid_preset_noteon(channel->preset, synth, chan, tokey, vel16);
 }

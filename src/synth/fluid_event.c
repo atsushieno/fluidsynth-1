@@ -143,12 +143,18 @@ fluid_event_timer(fluid_event_t *evt, void *data)
  * @param key MIDI note number (0-127)
  * @param vel MIDI velocity value (0-127)
  * @note Since fluidsynth 2.2.2, this function will give you a #FLUID_SEQ_NOTEOFF when
- * called with @p vel being zero.
+ * called with @p vel16 being zero.
  */
 void
-fluid_event_noteon(fluid_event_t *evt, int channel, short key, short vel)
+fluid_event_noteon(fluid_event_t *evt, int channel, short key, short vel7)
 {
-    if(vel == 0)
+    fluid_event_noteon2(evt, channel, key, fluid_midi2_get_midi2_velocity(vel7));
+}
+
+void
+fluid_event_noteon2(fluid_event_t *evt, int channel, short key, unsigned short vel16)
+{
+    if(vel16 == 0)
     {
         fluid_event_noteoff(evt, channel, key);
         return;
@@ -157,7 +163,7 @@ fluid_event_noteon(fluid_event_t *evt, int channel, short key, short vel)
     evt->type = FLUID_SEQ_NOTEON;
     evt->channel = channel;
     evt->key = key;
-    evt->vel = vel;
+    evt->vel16 = vel16;
 }
 
 /**
@@ -188,15 +194,21 @@ fluid_event_noteoff(fluid_event_t *evt, int channel, short key)
  * @param duration Duration of note in the time scale used by the sequencer
  *
  * @note The application should decide whether to use only Notes with duration, or separate NoteOn and NoteOff events.
- * @warning Calling this function with @p vel or @p duration being zero results in undefined behavior!
+ * @warning Calling this function with @p vel16 or @p duration being zero results in undefined behavior!
  */
 void
-fluid_event_note(fluid_event_t *evt, int channel, short key, short vel, unsigned int duration)
+fluid_event_note(fluid_event_t *evt, int channel, short key, short vel7, unsigned int duration)
+{
+    fluid_event_note2(evt, channel, key, fluid_midi2_get_midi2_velocity(vel7), duration);
+}
+
+void
+fluid_event_note2(fluid_event_t *evt, int channel, short key, unsigned short vel16, unsigned int duration)
 {
     evt->type = FLUID_SEQ_NOTE;
     evt->channel = channel;
     evt->key = key;
-    evt->vel = vel;
+    evt->vel16 = vel16;
     evt->duration = duration;
 }
 
@@ -656,14 +668,23 @@ short fluid_event_get_key(fluid_event_t *evt)
 }
 
 /**
- * Get the MIDI velocity field from a sequencer event structure.
+ * Get the MIDI velocity field from a sequencer event structure, in MIDI 1 value range.
  * @param evt Sequencer event structure
  * @return MIDI velocity value (0-127)
  */
 short fluid_event_get_velocity(fluid_event_t *evt)
-
 {
-    return evt->vel;
+    return fluid_midi2_get_midi1_velocity(evt->vel16);
+}
+
+/**
+ * Get the MIDI velocity field from a sequencer event structure, in MIDI 2 value range.
+ * @param evt Sequencer event structure
+ * @return MIDI velocity value (0-65535)
+ */
+unsigned short fluid_event_get_velocity2(fluid_event_t *evt)
+{
+    return evt->vel16;
 }
 
 /**

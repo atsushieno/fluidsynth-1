@@ -239,7 +239,7 @@ new_fluid_voice(fluid_rvoice_eventhandler_t *handler, fluid_real_t output_rate)
     voice->status = FLUID_VOICE_CLEAN;
     voice->chan = NO_CHANNEL;
     voice->key = 0;
-    voice->vel = 0;
+    voice->vel16 = 0;
     voice->eventhandler = handler;
     voice->channel = NULL;
     voice->sample = NULL;
@@ -283,7 +283,7 @@ delete_fluid_voice(fluid_voice_t *voice)
 int
 fluid_voice_init(fluid_voice_t *voice, fluid_sample_t *sample,
                  fluid_zone_range_t *inst_zone_range,
-                 fluid_channel_t *channel, int key, int vel, unsigned int id,
+                 fluid_channel_t *channel, int key, int vel16, unsigned int id,
                  unsigned int start_time, fluid_real_t gain)
 {
     /* Note: The voice parameters will be initialized later, when the
@@ -316,7 +316,7 @@ fluid_voice_init(fluid_voice_t *voice, fluid_sample_t *sample,
     voice->id = id;
     voice->chan = fluid_channel_get_num(channel);
     voice->key = (unsigned char) key;
-    voice->vel = (unsigned char) vel;
+    voice->vel16 = (unsigned short) vel16;
     voice->channel = channel;
     voice->mod_count = 0;
     voice->start_time = start_time;
@@ -974,7 +974,7 @@ fluid_voice_update_param(fluid_voice_t *voice, int gen)
 
         if(x > 0)
         {
-            voice->vel = x;
+            voice->vel16 = x;
         }
 
 #endif
@@ -1293,18 +1293,18 @@ void fluid_voice_update_portamento(fluid_voice_t *voice, int fromkey, int tokey)
 /*---------------------------------------------------------------*/
 /*legato mode 1: multi_retrigger
  *
- * Modulates all generators dependent of key,vel.
+ * Modulates all generators dependent of key,vel16.
  * Forces the voice envelopes in the attack section (legato mode 1).
  *
  * @voice voice the synthesis voice
  * @tokey the new key to be applied to this voice.
- * @vel the new velocity to be applied to this voice.
+ * @vel16 the new velocity to be applied to this voice.
  */
 void fluid_voice_update_multi_retrigger_attack(fluid_voice_t *voice,
-        int tokey, int vel)
+        int tokey, int vel16)
 {
     voice->key = tokey;  /* new note */
-    voice->vel = vel; /* new velocity */
+    voice->vel16 = (unsigned short) vel16; /* new velocity */
     /* Updates generators dependent of velocity */
     /* Modulates GEN_ATTENUATION (and others ) before calling
        fluid_rvoice_multi_retrigger_attack().*/
@@ -1741,7 +1741,7 @@ int fluid_voice_get_actual_velocity(const fluid_voice_t *voice)
  */
 int fluid_voice_get_velocity(const fluid_voice_t *voice)
 {
-    return voice->vel;
+    return voice->vel16;
 }
 
 /*

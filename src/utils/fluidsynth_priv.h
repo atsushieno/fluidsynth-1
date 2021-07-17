@@ -318,5 +318,7 @@ else \
 #define fluid_return_val_if_fail(cond, val) \
  fluid_return_if_fail(cond) (val)
 
+#define fluid_midi2_get_midi1_velocity(velocity16Bits) (velocity16Bits / 0x200)
+#define fluid_midi2_get_midi2_velocity(velocity7Bits) (velocity7Bits * 0x200)
 
 #endif /* _FLUIDSYNTH_PRIV_H */

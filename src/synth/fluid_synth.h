@@ -255,14 +255,15 @@ void fluid_synth_set_sample_rate_immediately(fluid_synth_t *synth, float sample_
 
 /* extern declared in fluid_synth_monopoly.c */
 
-int fluid_synth_noteon_mono_staccato(fluid_synth_t *synth, int chan, int key, int vel);
-int fluid_synth_noteon_mono_LOCAL(fluid_synth_t *synth, int chan, int key, int vel);
+int fluid_synth_noteon_mono_staccato(fluid_synth_t *synth, int chan, int key, int vel16);
+int fluid_synth_noteon_mono_LOCAL(fluid_synth_t *synth, int chan, int key, int vel16);
 int fluid_synth_noteoff_mono_LOCAL(fluid_synth_t *synth, int chan, int key);
-int fluid_synth_noteon_monopoly_legato(fluid_synth_t *synth, int chan, int fromkey, int tokey, int vel);
+int fluid_synth_noteon_monopoly_legato(fluid_synth_t *synth, int chan, int fromkey, int tokey, int vel16);
 int fluid_synth_noteoff_monopoly(fluid_synth_t *synth, int chan, int key, char Mono);
 
 fluid_voice_t *
-fluid_synth_alloc_voice_LOCAL(fluid_synth_t *synth, fluid_sample_t *sample, int chan, int key, int vel, fluid_zone_range_t *zone_range);
+fluid_synth_alloc_voice_LOCAL(fluid_synth_t *synth, fluid_sample_t *sample, int chan, int key, int vel16, fluid_zone_range_t *zone_range);
 
 void fluid_synth_release_voice_on_same_note_LOCAL(fluid_synth_t *synth, int chan, int key);
 #endif  /* _FLUID_SYNTH_H */
+

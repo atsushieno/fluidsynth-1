@@ -67,7 +67,7 @@ struct _fluid_voice_t
     unsigned char status;
     unsigned char chan;             /* the channel number, quick access for channel messages */
     unsigned char key;              /* the key of the noteon event, quick access for noteoff */
-    unsigned char vel;              /* the velocity of the noteon event */
+    unsigned short vel16;              /* the velocity of the noteon event */
     fluid_channel_t *channel;
     fluid_rvoice_eventhandler_t *eventhandler;
     fluid_zone_range_t *zone_range;  /* instrument zone range*/

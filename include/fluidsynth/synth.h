@@ -67,7 +67,8 @@ FLUID_DEPRECATED FLUIDSYNTH_API const char *fluid_synth_error(fluid_synth_t *syn
  *
  * @{
  */
-FLUIDSYNTH_API int fluid_synth_noteon(fluid_synth_t *synth, int chan, int key, int vel);
+FLUIDSYNTH_API int fluid_synth_noteon(fluid_synth_t *synth, int chan, int key, int vel7);
+FLUIDSYNTH_API int fluid_synth_noteon2(fluid_synth_t *synth, int chan, int key, int vel16);
 FLUIDSYNTH_API int fluid_synth_noteoff(fluid_synth_t *synth, int chan, int key);
 FLUIDSYNTH_API int fluid_synth_cc(fluid_synth_t *synth, int chan, int ctrl, int val);
 FLUIDSYNTH_API int fluid_synth_get_cc(fluid_synth_t *synth, int chan, int ctrl, int *pval);
@@ -115,12 +116,16 @@ FLUIDSYNTH_API float fluid_synth_get_gen(fluid_synth_t *synth, int chan, int par
  */
 FLUIDSYNTH_API int fluid_synth_start(fluid_synth_t *synth, unsigned int id,
                                      fluid_preset_t *preset, int audio_chan,
-                                     int midi_chan, int key, int vel);
+                                     int midi_chan, int key, int vel7);
+FLUIDSYNTH_API int fluid_synth_start2(fluid_synth_t *synth, unsigned int id,
+                                      fluid_preset_t *preset,
+                                      int audio_chan, int chan, int key, int vel16);
+
 FLUIDSYNTH_API int fluid_synth_stop(fluid_synth_t *synth, unsigned int id);
 
 FLUIDSYNTH_API fluid_voice_t *fluid_synth_alloc_voice(fluid_synth_t *synth,
         fluid_sample_t *sample,
-        int channum, int key, int vel);
+        int channum, int key, int vel16);
 FLUIDSYNTH_API void fluid_synth_start_voice(fluid_synth_t *synth, fluid_voice_t *voice);
 FLUIDSYNTH_API void fluid_synth_get_voicelist(fluid_synth_t *synth,
         fluid_voice_t *buf[], int bufsize, int ID);

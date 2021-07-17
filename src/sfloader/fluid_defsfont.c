@@ -186,9 +186,9 @@ int fluid_defpreset_preset_get_num(fluid_preset_t *preset)
 }
 
 int fluid_defpreset_preset_noteon(fluid_preset_t *preset, fluid_synth_t *synth,
-                                  int chan, int key, int vel)
+                                  int chan, int key, int vel16)
 {
-    return fluid_defpreset_noteon(fluid_preset_get_data(preset), synth, chan, key, vel);
+    return fluid_defpreset_noteon(fluid_preset_get_data(preset), synth, chan, key, vel16);
 }
 
 
@@ -860,7 +860,7 @@ fluid_defpreset_noteon_add_mod_to_voice(fluid_voice_t *voice,
  * fluid_defpreset_noteon
  */
 int
-fluid_defpreset_noteon(fluid_defpreset_t *defpreset, fluid_synth_t *synth, int chan, int key, int vel)
+fluid_defpreset_noteon(fluid_defpreset_t *defpreset, fluid_synth_t *synth, int chan, int key, int vel16)
 {
     fluid_preset_zone_t *preset_zone, *global_preset_zone;
     fluid_inst_t *inst;
@@ -870,6 +870,9 @@ fluid_defpreset_noteon(fluid_defpreset_t *defpreset, fluid_synth_t *synth, int c
     fluid_voice_t *voice;
     int tuned_key;
     int i;
+    int vel7;
+
+    vel7 = fluid_midi2_get_midi1_velocity(vel16);
 
     /* For detuned channels it might be better to use another key for Soundfont sample selection
      * giving better approximations for the pitch than the original key.
@@ -898,7 +901,7 @@ fluid_defpreset_noteon(fluid_defpreset_t *defpreset, fluid_synth_t *synth, int c
 
         /* check if the note falls into the key and velocity range of this
            preset */
-        if(fluid_zone_inside_range(&preset_zone->range, tuned_key, vel))
+        if(fluid_zone_inside_range(&preset_zone->range, tuned_key, vel7))
         {
 
             inst = fluid_preset_zone_get_inst(preset_zone);
@@ -913,13 +916,13 @@ fluid_defpreset_noteon(fluid_defpreset_t *defpreset, fluid_synth_t *synth, int c
                    the key and velocity range of this  instrument zone.
                    An instrument zone must be ignored when its voice is already running
                    played by a legato passage (see fluid_synth_noteon_monopoly_legato()) */
-                if(fluid_zone_inside_range(&voice_zone->range, tuned_key, vel))
+                if(fluid_zone_inside_range(&voice_zone->range, tuned_key, vel7))
                 {
 
                     inst_zone = voice_zone->inst_zone;
 
                     /* this is a good zone. allocate a new synthesis process and initialize it */
-                    voice = fluid_synth_alloc_voice_LOCAL(synth, inst_zone->sample, chan, key, vel, &voice_zone->range);
+                    voice = fluid_synth_alloc_voice_LOCAL(synth, inst_zone->sample, chan, key, vel16, &voice_zone->range);
 
                     if(voice == NULL)
                     {

@@ -40,7 +40,7 @@ struct _fluid_event_t
     fluid_seq_id_t dest;
     int channel;
     short key;
-    short vel;
+    unsigned short vel16;
     short control;
     int value;
     fluid_note_id_t id;
