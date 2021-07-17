@@ -1234,6 +1234,30 @@ fluid_synth_error(fluid_synth_t *synth)
 }
 
 /**
+ * Get current MIDI CI Protocol that indicates whether it accepts MIDI 1 messages or MIDI 2.0 UMPs.
+ *
+ * @param synth Fluidsynth instance
+ * @return protocol A fluid_midi_ci_protocol value that indicates the protocol in use.
+ */
+enum fluid_midi_ci_protocol fluid_synth_get_protocol(fluid_synth_t *synth)
+{
+    return synth->protocol;
+}
+
+/**
+ * Set new MIDI CI Protocol to switch to MIDI 1 or MIDI 2.0 mode.
+ *
+ * @param synth Fluidsynth instance
+ * @param protocol The new protocol to use. One of fluid_midi_ci_protocol values.
+ */
+int fluid_synth_set_protocol(fluid_synth_t *synth, enum fluid_midi_ci_protocol protocol)
+{
+    fluid_return_val_if_fail(protocol >= 0 && protocol <= 2, FLUID_FAILED);
+    synth->protocol = protocol;
+    return FLUID_OK;
+}
+
+/**
  * Send a note-on event to a FluidSynth object.
  *
  * This function will take care of proper legato playing. If a note on channel @p chan is

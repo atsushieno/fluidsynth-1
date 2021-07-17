@@ -164,6 +164,7 @@ struct _fluid_synth_t
     fluid_ladspa_fx_t *ladspa_fx;      /**< Effects unit for LADSPA support */
     enum fluid_iir_filter_type custom_filter_type; /**< filter type of the user-defined filter currently used for all voices */
     enum fluid_iir_filter_flags custom_filter_flags; /**< filter type of the user-defined filter currently used for all voices */
+    enum fluid_midi_ci_protocol protocol; /** MIDI CI protocol to indicate whether it accepts MIDI 1.0 messages or MIDI 2.0 UMPs */
 };
 
 /**

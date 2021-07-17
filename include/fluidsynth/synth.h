@@ -533,6 +533,30 @@ int fluid_synth_unpin_preset(fluid_synth_t *synth, int sfont_id, int bank_num, i
 /** @ingroup ladspa */
 FLUIDSYNTH_API fluid_ladspa_fx_t *fluid_synth_get_ladspa_fx(fluid_synth_t *synth);
 
+
+enum fluid_midi_ci_protocol
+{
+    FLUID_MIDI_CI_PROTOCOL_NONE = 0,
+    FLUID_MIDI_CI_PROTOCOL_MIDI1 = 1,
+    FLUID_MIDI_CI_PROTOCOL_MIDI2 = 2
+};
+
+/**
+ * Get current MIDI CI Protocol that indicates whether it accepts MIDI 1 messages or MIDI 2.0 UMPs.
+ *
+ * @param synth Fluidsynth instance
+ * @return protocol A fluid_midi_ci_protocol value that indicates the protocol in use.
+ */
+enum fluid_midi_ci_protocol fluid_synth_get_protocol(fluid_synth_t *synth);
+
+/**
+ * Set new MIDI CI Protocol to switch to MIDI 1 or MIDI 2.0 mode.
+ *
+ * @param synth Fluidsynth instance
+ * @param protocol The new protocol to use. One of fluid_midi_ci_protocol values.
+ */
+int fluid_synth_set_protocol(fluid_synth_t *synth, enum fluid_midi_ci_protocol protocol);
+
 #ifdef __cplusplus
 }
 #endif
